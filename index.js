@@ -334,8 +334,9 @@ Server.prototype._onListen = function (result) {
   } else {
     this.emit('error', exceptionWithHostPort(result, 'listen', this._host, this._port))
     if (this.id) {
-      chrome.sockets.tcpServer.close(this.id)
-      delete servers[this.id]
+      chrome.sockets.tcpServer.close(this.id, () => {
+        delete servers[this.id]
+      })
       this.id = null
     }
   }
@@ -383,8 +384,9 @@ Server.prototype.close = function (callback) {
   }
 
   if (this.id) {
-    chrome.sockets.tcpServer.close(this.id)
-    delete servers[this.id]
+    chrome.sockets.tcpServer.close(this.id, () => {
+      delete servers[this.id]
+    })
     this.id = null
   }
   this._address = null
@@ -891,8 +893,8 @@ Socket.prototype._destroy = function (exception, cb) {
   // callback, we don't have an id. Therefore we don't need to close
   // or disconnect
   if (this.id) {
-    delete sockets[this.id]
     chrome.sockets.tcp.close(this.id, () => {
+      delete sockets[this.id]
       if (this.destroyed) {
         this.emit('close', !!exception)
       }
